@@ -25,29 +25,26 @@ const Login = () => {
       return;
     }
 
-    // Save user to localStorage
     localStorage.setItem("user", JSON.stringify(formData));
 
-    // Redirect to Home
-    navigate("/dashboard");
+    // IMPORTANT: replace history
+    navigate("/dashboard", { replace: true });
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-6">
-      <div className="bg-zinc-900 p-10 rounded-2xl shadow-xl w-full max-w-md border border-zinc-800">
-
-        <h2 className="text-3xl text-white font-semibold mb-8 text-center">
-          Get Started
+    <div className="px-6 py-10 w-full flex justify-center">
+      <div className="bg-zinc-900 p-8 rounded-2xl shadow-2xl w-full max-w-sm border border-zinc-800">
+        <h2 className="text-2xl text-white font-semibold mb-6 text-center">
+          Enter your details
         </h2>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <input
             type="text"
             name="name"
             placeholder="Full Name"
             onChange={handleChange}
-            className="bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+            className="bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500"
           />
 
           <input
@@ -55,7 +52,7 @@ const Login = () => {
             name="email"
             placeholder="Email"
             onChange={handleChange}
-            className="bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+            className="bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500"
           />
 
           <input
@@ -63,14 +60,13 @@ const Login = () => {
             name="password"
             placeholder="Password"
             onChange={handleChange}
-            className="bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+            className="bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500"
           />
 
-          <button className="bg-blue-600 hover:bg-blue-700 py-3 rounded-lg text-white font-medium transition">
+          <button className="bg-blue-600 hover:bg-blue-700 py-2.5 rounded-lg text-white">
             Continue
           </button>
         </form>
-
       </div>
     </div>
   );

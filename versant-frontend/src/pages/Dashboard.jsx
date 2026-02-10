@@ -1,30 +1,38 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const navigate = useNavigate();
 
+  const user = JSON.parse(localStorage.getItem("user"));
+  const userName = user?.name || "User";
+
+  useEffect(() => {
+    if (!user) {
+      navigate("/", { replace: true });
+    }
+  },);
+
   return (
-    <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+    <div className="w-full max-w-lg">
+      <div className="bg-zinc-900 p-8 rounded-2xl text-white text-center shadow-2xl border border-zinc-800">
 
-      <div className="bg-zinc-900 p-10 rounded-2xl text-white text-center shadow-xl">
-
-        <h2 className="text-3xl font-semibold mb-6">
-          Welcome to Your Dashboard
+        <h2 className="text-2xl font-semibold mb-4">
+          Hello {userName}, welcome to Alike-Versant
         </h2>
 
-        <p className="text-zinc-400 mb-8">
+        <p className="text-zinc-400 mb-6">
           Ready to begin your AI English speaking assessment?
         </p>
 
         <button
-          onClick={() => navigate("/home")}
-          className="bg-blue-600 hover:bg-blue-700 px-8 py-3 rounded-full transition"
+          onClick={() => navigate("/home", { replace: true })}
+          className="bg-blue-600 hover:bg-blue-700 px-8 py-3 rounded-full"
         >
-          Continue to Test Overview
+          Continue
         </button>
 
       </div>
-
     </div>
   );
 };
