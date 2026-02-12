@@ -27,7 +27,7 @@ const Login = () => {
 
     localStorage.setItem("user", JSON.stringify(formData));
 
-    // IMPORTANT: replace history
+    
     navigate("/dashboard", { replace: true });
   };
 

@@ -22,7 +22,7 @@ const Dashboard = () => {
         </h2>
 
         <p className="text-zinc-400 mb-6">
-          Ready to begin your AI English speaking assessment?
+          Ready to begin your AI English listening and, speaking assessment?
         </p>
 
         <button

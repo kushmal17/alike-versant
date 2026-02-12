@@ -1,52 +1,83 @@
 import { useState, useRef } from "react";
 
-const AudioRecorder = ({ onRecordingComplete }) => {
+const AudioRecorder = ({
+  correctAnswer,
+  onRecordingStart,
+  onEvaluationComplete
+}) => {
   const [isRecording, setIsRecording] = useState(false);
-  const mediaRecorderRef = useRef(null);
-  const audioChunks = useRef([]);
+  const recognitionRef = useRef(null);
 
-  const startRecording = async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const mediaRecorder = new MediaRecorder(stream);
-    mediaRecorderRef.current = mediaRecorder;
+  const calculateSimilarity = (user, correct) => {
+    const userWords = user.split(" ");
+    const correctWords = correct.split(" ");
 
-    mediaRecorder.ondataavailable = (event) => {
-      audioChunks.current.push(event.data);
-    };
+    let matchCount = 0;
 
-    mediaRecorder.onstop = () => {
-      const blob = new Blob(audioChunks.current, { type: "audio/webm" });
-      audioChunks.current = [];
-      onRecordingComplete(blob);
-    };
+    userWords.forEach(word => {
+      if (correctWords.includes(word)) {
+        matchCount++;
+      }
+    });
 
-    mediaRecorder.start();
-    setIsRecording(true);
+    const percent = (matchCount / correctWords.length) * 100;
+
+    if (percent >= 90) return 100;
+    if (percent >= 70) return 80;
+    if (percent >= 50) return 60;
+    return 40;
   };
 
-  const stopRecording = () => {
-    mediaRecorderRef.current.stop();
-    setIsRecording(false);
+  const startRecording = () => {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      alert("Speech Recognition not supported in this browser.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onstart = () => {
+      setIsRecording(true);
+      onRecordingStart();
+    };
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript.toLowerCase();
+
+      const score = calculateSimilarity(
+        transcript,
+        correctAnswer.toLowerCase()
+      );
+
+      onEvaluationComplete(score);
+    };
+
+    recognition.onerror = () => {
+      setIsRecording(false);
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+    };
+
+    recognition.start();
+    recognitionRef.current = recognition;
   };
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      {!isRecording ? (
-        <button
-          onClick={startRecording}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full text-lg shadow-lg transition"
-        >
-          🎤 Start Recording
-        </button>
-      ) : (
-        <button
-          onClick={stopRecording}
-          className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full text-lg shadow-lg transition"
-        >
-          ⏹ Stop Recording
-        </button>
-      )}
-    </div>
+    <button
+      onClick={startRecording}
+      disabled={isRecording}
+      className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-full"
+    >
+      {isRecording ? "Recording..." : "🎤 Start Recording"}
+    </button>
   );
 };
 

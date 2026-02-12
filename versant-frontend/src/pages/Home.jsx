@@ -29,7 +29,7 @@ const Home = () => {
           {sections.map((section) => (
             <div
               key={section.id}
-              className="flex items-start gap-3 p-3 bg-zinc-800 rounded-xl border border-zinc-700"
+              className="flex items-start gap-3 p-3 bg-white-800 rounded-xl border border-zinc-700"
             >
               <span className="text-blue-400 font-semibold">
                 Part {section.id}

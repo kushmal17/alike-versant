@@ -45,6 +45,7 @@ const SpeakingTips = () => {
             </li>
             <li>
               Speak like you are <span className="font-semibold text-white">talking to another person</span> on the phone.
+              There is no need to speak too slowly or carefully.
             </li>
             <li>
               Speak at a <span className="font-semibold text-white">normal volume</span>, not too loud or too soft.

@@ -6,70 +6,130 @@ import AudioRecorder from "../components/AudioRecorder";
 import VoiceGuide from "../components/VoiceGuide";
 import TestProgress from "../components/TestProgress";
 import AISpeakingIndicator from "../components/AISpeakingIndicator";
-import { calculateFinalScore } from "../utils/helpers";
 
 const sections = [
-  { id: "A", instruction: "Give a short answer to the question.", question: "What color is the sky?", time: 10 },
-  { id: "B", instruction: "Repeat the sentence you hear.", question: "Technology improves communication.", time: 10 },
-  { id: "C", instruction: "Listen and answer the question.", question: "Why is the man late?", time: 15 },
-  { id: "D", instruction: "Answer the question about the passage.", question: "What is the main idea?", time: 20 },
-  { id: "E", instruction: "Retell the passage in your own words.", question: "The passage discusses the importance of exercise.", time: 30 },
-  { id: "F", instruction: "Give your opinion on the topic.", question: "Do you think remote work is effective?", time: 30 },
+  {
+    id: "A",
+    instruction: "Give a short answer to the question.",
+    question: "What color is the sky?",
+    correctAnswer: "blue",
+    time: 30
+  },
+  {
+    id: "B",
+    instruction: "Repeat the sentence you hear.",
+    question: "Technology improves communication.",
+    correctAnswer: "Technology improves communication",
+    time: 30
+  },
+  {
+    id: "C",
+    instruction: "Listen and answer the question.",
+    audio: "/audio/11.1.mp3",
+    question: "Why is the man late?",
+    correctAnswer: "He missed the bus",
+    time: 30
+  }
 ];
 
 const Test = () => {
   const navigate = useNavigate();
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [phase, setPhase] = useState("instruction");
-  const [recordings, setRecordings] = useState([]);
+  const [phase, setPhase] = useState(
+    sections[0].audio ? "audio" : "instruction"
+  );
+  const [scores, setScores] = useState([]);
   const [isAISpeaking, setIsAISpeaking] = useState(false);
+  const [isTimerActive, setIsTimerActive] = useState(false);
 
   const currentSection = sections[currentIndex];
 
-  // Move between phases
-  const handleVoiceEnd = () => {
-    if (phase === "instruction") {
-      setPhase("question");
-    } else if (phase === "question") {
-      setPhase("recording");
+  // Move to next section
+  const moveToNextSection = () => {
+    if (currentIndex < sections.length - 1) {
+      const nextIndex = currentIndex + 1;
+      setCurrentIndex(nextIndex);
+      setPhase(sections[nextIndex].audio ? "audio" : "instruction");
+      setIsTimerActive(false);
+    } else {
+      const finalScore =
+        scores.length > 0
+          ? scores.reduce((a, b) => a + b, 0) / scores.length
+          : 0;
+
+      localStorage.setItem(
+        "finalScore",
+        finalScore.toFixed(0)
+      );
+
+      navigate("/result", { replace: true });
     }
   };
 
-  // When timer ends
+  const handleVoiceEnd = () => {
+    setPhase("ready");
+  };
+
+  const handleRecordingStart = () => {
+    setIsTimerActive(true);
+  };
+
   const handleTimeUp = () => {
-    if (currentIndex < sections.length - 1) {
-      setCurrentIndex((prev) => prev + 1);
-      setPhase("instruction");
-    } else {
-      const finalScore = calculateFinalScore(recordings);
-      localStorage.setItem("finalScore", finalScore);
-      navigate("/result");
-    }
+    setIsTimerActive(false);
+    moveToNextSection();
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white flex flex-col items-center justify-center gap-8 px-6">
+    <div className="flex flex-col items-center gap-8 px-6">
 
-      {/* Progress Bar */}
-      <TestProgress currentIndex={currentIndex} total={sections.length} />
+      <TestProgress
+        currentIndex={currentIndex}
+        total={sections.length}
+      />
 
-      {/* AI Speaking Animation */}
       <AISpeakingIndicator isSpeaking={isAISpeaking} />
 
-      {/* Instruction Voice */}
+      {/* 🔊 AUDIO SECTION */}
+      {phase === "audio" && currentSection.audio && (
+        <div className="bg-zinc-900 p-6 rounded-xl border border-zinc-800 w-full max-w-md text-center">
+
+          <h3 className="text-white text-lg mb-4">
+            Listen Carefully
+          </h3>
+
+          <audio
+            controls
+            className="w-full mb-4"
+            onEnded={() => setPhase("question")}
+          >
+            <source
+              src={currentSection.audio}
+              type="audio/mpeg"
+            />
+            Your browser does not support audio.
+          </audio>
+
+          <p className="text-zinc-400 text-sm">
+            After the audio ends, the question will appear.
+          </p>
+
+        </div>
+      )}
+
+      {/* 🤖 AI INSTRUCTION */}
       {phase === "instruction" && (
         <VoiceGuide
           text={`Part ${currentSection.id}. ${currentSection.instruction}`}
           onStart={() => setIsAISpeaking(true)}
           onEnd={() => {
             setIsAISpeaking(false);
-            handleVoiceEnd();
+            setPhase("question");
           }}
         />
       )}
 
-      {/* Question Voice */}
+      {/* 🤖 AI QUESTION */}
       {phase === "question" && (
         <VoiceGuide
           text={currentSection.question}
@@ -81,23 +141,29 @@ const Test = () => {
         />
       )}
 
-      {/* Question Display */}
-      {(phase === "question" || phase === "recording") && (
+      {/* Show Question */}
+      {(phase === "question" || phase === "ready") && (
         <QuestionCard question={currentSection.question} />
       )}
 
-      {/* Recording Phase */}
-      {phase === "recording" && (
+      {/* 🎤 RECORDING SECTION */}
+      {phase === "ready" && (
         <>
-          <Timer
-            duration={currentSection.time}
-            onTimeUp={handleTimeUp}
-          />
+          {isTimerActive && (
+            <Timer
+              key={currentIndex}
+              duration={30}
+              onTimeUp={handleTimeUp}
+            />
+          )}
 
           <AudioRecorder
-            onRecordingComplete={(blob) =>
-              setRecordings((prev) => [...prev, blob])
-            }
+            key={currentIndex}
+            correctAnswer={currentSection.correctAnswer}
+            onRecordingStart={handleRecordingStart}
+            onEvaluationComplete={(score) => {
+              setScores(prev => [...prev, score]);
+            }}
           />
         </>
       )}
