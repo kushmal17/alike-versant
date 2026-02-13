@@ -15,9 +15,11 @@ const VoiceGuide = ({ text, onStart, onEnd }) => {
       onEnd && onEnd();
     };
 
-    speechSynthesis.speak(utterance);
+    window.speechSynthesis.speak(utterance);
 
-    return () => speechSynthesis.cancel();
+    return () => {
+      window.speechSynthesis.cancel();
+    };
   }, [text]);
 
   return null;
